@@ -71,9 +71,9 @@ public class BasicMecham extends OpMode {
    @Override
    public void loop() {
        // Setup mecanum wheel drive variables
-       double y = gamepad1.left_stick_y;
-       double x =  -gamepad1.left_stick_x;
-       double turn  =  -gamepad1.right_stick_x;
+       double y = gamepad1.left_stick_y;// changes
+       double x =  -gamepad1.left_stick_x;// changes
+       double turn  =  -gamepad1.right_stick_x;// changes
        double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(turn), 1);
 
 
