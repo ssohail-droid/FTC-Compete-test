@@ -32,10 +32,10 @@ public class BasicMecham extends OpMode {
    public void init() {
 
        // Initialize drive motors
-       frontLeft  = hardwareMap.get(DcMotor.class, "0"); // changes
-       backLeft  = hardwareMap.get(DcMotor.class, "1"); // changes
-       frontRight = hardwareMap.get(DcMotor.class, "2"); // changes
-       backRight = hardwareMap.get(DcMotor.class, "3"); // changes
+       frontLeft  = hardwareMap.get(DcMotor.class, "0"); // changes by sohail 
+       backLeft  = hardwareMap.get(DcMotor.class, "1"); // changes by sohail
+       frontRight = hardwareMap.get(DcMotor.class, "2"); // changes by sohail
+       backRight = hardwareMap.get(DcMotor.class, "3"); // changes by sohail
 
        // Reverse right motors
        frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -62,17 +62,17 @@ public class BasicMecham extends OpMode {
    @Override
    public void loop() {
        // Setup mecanum wheel drive variables
-       double y = gamepad1.left_stick_y;
-       double x =  -gamepad1.left_stick_x;
-       double turn  =  -gamepad1.right_stick_x;
+       double y = gamepad1.left_stick_y; // changes by sohail
+       double x =  -gamepad1.left_stick_x; // changes by sohail
+       double turn  =  -gamepad1.right_stick_x; // changes by sohail
 
-       double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(turn), 0.2);//og.5
+       double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(turn), 0.2);//og.1 changes by Kezia
 
        // Calculate power for each wheel
-       double frontLeftPower = ((y + x + turn) / denominator-.05)*0.5;
-       double backLeftPower  = ((y - x + turn) / denominator+.2)*0.5;
-       double frontRightPower = ((y - x - turn) / denominator-.05)*0.5;
-       double backRightPower  = ((y + x - turn) / denominator)*0.5;
+       double frontLeftPower = ((y + x + turn) / denominator-.05)*0.5; // changes by Kezia
+       double backLeftPower  = ((y - x + turn) / denominator+.2)*0.5; // changes by Kezia
+       double frontRightPower = ((y - x - turn) / denominator-.05)*0.5; // changes by Kezia
+       double backRightPower  = ((y + x - turn) / denominator)*0.5; // changes by Kezia
 
        // Set power to wheels
 
@@ -83,11 +83,11 @@ public class BasicMecham extends OpMode {
 
        // Motor encoder control using D-pad
        if (gamepad2.dpad_up) {
-           linearMotor.setTargetPosition(linearMotor.getCurrentPosition() + 100); // changes
+           linearMotor.setTargetPosition(linearMotor.getCurrentPosition() + 100); // changes need
            linearMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
            linearMotor.setPower(1.0); // Adjust speed if necessary
        } else if (gamepad2.dpad_down) {
-           linearMotor.setTargetPosition(linearMotor.getCurrentPosition() - 100); // changes
+           linearMotor.setTargetPosition(linearMotor.getCurrentPosition() - 100); // changes need
            linearMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
            linearMotor.setPower(1.0);
        }
