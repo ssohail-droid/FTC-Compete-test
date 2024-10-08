@@ -1,0 +1,186 @@
+package org.firstinspires.ftc.teamcode;
+
+
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+
+
+@TeleOp(name="FTC Compet test ", group="Iterative OpMode")
+public class BasicMecham extends OpMode {
+
+
+    // Declare OpMode members
+    private ElapsedTime runtime = new ElapsedTime();
+    private DcMotor frontLeft = null;
+    private DcMotor backLeft = null;
+    private DcMotor frontRight = null;
+    private DcMotor backRight = null;
+
+
+    // Declare new motor and servo
+    private DcMotor linearMotor = null;
+    private Servo gripperServo = null;
+    private Servo flipWrist =null;
+    private DcMotor flipFeed =null;
+
+
+    // Servo state variables
+    private boolean isServoOpen = false;
+    private boolean lastXButtonState = false;
+    private boolean isWristUsed = false;
+    private boolean lastAButtonState = false;
+    //private boolean firstYButtonState = false;
+    //private boolean slowDown = false;
+
+
+    @Override
+    public void init() {
+
+
+        // Initialize drive motors
+        frontLeft  = hardwareMap.get(DcMotor.class, "0"); // changes
+        backLeft  = hardwareMap.get(DcMotor.class, "1"); // changes
+        frontRight = hardwareMap.get(DcMotor.class, "2"); // changes
+        backRight = hardwareMap.get(DcMotor.class, "3"); // changes
+
+
+        // Reverse right motors
+        frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        backRight.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        // the thingamajig that goes vroo vroo
+
+        flipFeed = hardwareMap.get(DcMotor.class, "weeewoo"); // changes
+        flipFeed.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        flipFeed.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+
+        // Initialize linear motor and set encoder behavior
+        linearMotor = hardwareMap.get(DcMotor.class, "arm"); // changes
+        linearMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        linearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+
+        // Initialize
+        gripperServo = hardwareMap.get(Servo.class, "claw");
+        flipWrist = hardwareMap.get(Servo.class, "wrist"); // changes
+
+
+        // Tell the driver that initialization is complete.
+        telemetry.addData("Status", "Initialized");
+    }
+
+
+    @Override
+    public void start() {
+        runtime.reset();
+    }
+
+
+    @Override
+    public void loop() {
+        // Setup mecanum wheel drive variables
+        double y = gamepad1.left_stick_y;
+        double x =  -gamepad1.left_stick_x;
+        double turn  =  -gamepad1.right_stick_x;
+
+        double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(turn), 0.2); //og.5
+
+        // Calculate power for each wheel
+        double frontLeftPower = ((y + x + turn) / denominator - 0.05) * 0.75;
+        double backLeftPower  = ((y - x + turn) / denominator + 0.2) * 0.75;
+        double frontRightPower = ((y - x - turn) / denominator - 0.05) * 0.75;
+        double backRightPower  = ((y + x - turn) / denominator) * 0.75;
+
+        // Set power to wheels
+        frontLeft.setPower(frontLeftPower);
+        backLeft.setPower(backLeftPower);
+        frontRight.setPower(frontRightPower);
+        backRight.setPower(backRightPower);
+
+        // Motor encoder control using D-pad
+        if (gamepad2.dpad_up) {
+            linearMotor.setTargetPosition(linearMotor.getCurrentPosition() + 100); // changes
+            linearMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            linearMotor.setPower(1.0); // Adjust speed if necessary
+        } else if (gamepad2.dpad_down) {
+            linearMotor.setTargetPosition(linearMotor.getCurrentPosition() - 100); // changes
+            linearMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            linearMotor.setPower(1.0);
+        }
+
+        if (gamepad2.right_bumper) {
+            flipFeed.setTargetPosition(flipFeed.getCurrentPosition() + 100); // changes
+            flipFeed.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            flipFeed.setPower(1.0); // Adjust speed if necessary
+        } else if (gamepad2.left_bumper) {
+            flipFeed.setTargetPosition(flipFeed.getCurrentPosition() - 100); // changes
+            flipFeed.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            flipFeed.setPower(1.0);
+        }
+
+        // Toggle servo open/close with X button
+        if (gamepad2.x && !lastXButtonState) {  // Detect edge of button press
+            isServoOpen = !isServoOpen;
+            if (isServoOpen) {
+                gripperServo.setPosition(0.12); // Open position changes
+            } else {
+                gripperServo.setPosition(0.0);  // Closed position changes
+            }
+        }
+        lastXButtonState = gamepad2.x;  // Update last x button state
+
+        if (gamepad2.a && !lastAButtonState) {  // Detect edge of button press
+            isWristUsed = !isWristUsed;
+            if (isWristUsed) {
+                flipWrist.setPosition(0.67); // Open position changes
+            } else {
+                flipWrist.setPosition(0.0);  // Closed position changes
+            }
+        }
+       /* lastAButtonState = gamepad2.a;  // Update last A button state
+        if (gamepad1.x && !firstXButtonState) {  // Detect edge of button press
+            slowDown = !slowDown;
+            if (slowDown) {
+                frontLeft.setPower(frontLeftPower*0.7);
+                backLeft.setPower(backLeftPower*.7);
+                frontRight.setPower(frontRightPower*.7);
+                backRight.setPower(backRightPower*.7); // Open position changes
+            } else {
+                frontLeft.setPower(frontLeftPower);
+                backLeft.setPower(backLeftPower);
+                frontRight.setPower(frontRightPower);
+                backRight.setPower(backRightPower); // Closed position changes
+            }
+        }
+
+        */
+
+        // Telemetry data for linear motor and servos
+        telemetry.addData("Intack pos", flipFeed.getCurrentPosition());
+        telemetry.addData("Linear Motor Position", linearMotor.getCurrentPosition());
+        telemetry.addData("Servo Position", gripperServo.getPosition());
+
+        // Drivetrain telemetry - showing encoder ticks (positions) for each wheel
+        telemetry.addData("Front Left Ticks", frontLeft.getCurrentPosition());
+        telemetry.addData("Back Left Ticks", backLeft.getCurrentPosition());
+        telemetry.addData("Front Right Ticks", frontRight.getCurrentPosition());
+        telemetry.addData("Back Right Ticks", backRight.getCurrentPosition());
+
+        // Update telemetry
+        telemetry.update();
+    }
+
+
+
+}
+
+
+
+
+
+
