@@ -1,0 +1,185 @@
+package org.firstinspires.ftc.teamcode.MechamTest;
+
+import static java.lang.Thread.sleep;
+
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+
+@TeleOp(name="FTC KeziaTest", group="Iterative OpMode")
+public class BasicMtecham extends OpMode {
+
+    // Declare OpMode members
+    private ElapsedTime runtime = new ElapsedTime();
+    private DcMotor frontLeft = null;
+    private DcMotor backLeft = null;
+    private DcMotor frontRight = null;
+    private DcMotor backRight = null;
+
+    // Declare new motors and servos
+    private DcMotor linearMotor = null;
+    private DcMotor backArm = null;
+    private Servo gripperServo = null;
+    private Servo flipWrist = null;
+    private Servo continuousServo = null;
+
+    // Boolean flags to keep track of toggle state
+    boolean isClockwise = false;
+    boolean isCounterClockwise = false;
+
+    // Servo state variables
+    private boolean isServoOpen = false;
+    private boolean lastXButtonState = false;
+    private boolean isWristUsed = false;
+    private boolean lastAButtonState = false;
+    private boolean firstXButtonState = false;
+    private boolean firstBButtonState = false;
+
+    @Override
+    public void init() {
+        // Initialize drive motors
+        frontLeft = hardwareMap.get(DcMotor.class, "leftFront");
+        backLeft = hardwareMap.get(DcMotor.class, "leftBack");
+        frontRight = hardwareMap.get(DcMotor.class, "rightFront");
+        backRight = hardwareMap.get(DcMotor.class, "rightBack");
+
+        // Reverse right motors
+        frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        backRight.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        // Initialize linear motor and set encoder behavior
+        linearMotor = hardwareMap.get(DcMotor.class, "arm");
+        linearMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        linearMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        backArm = hardwareMap.get(DcMotor.class, "backArm");
+        backArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        // Initialize servos
+        gripperServo = hardwareMap.get(Servo.class, "claw");
+        flipWrist = hardwareMap.get(Servo.class, "wrist");
+        continuousServo = hardwareMap.get(Servo.class, "intake");
+
+        // Tell the driver that initialization is complete.
+        telemetry.addData("Status", "Initialized");
+    }
+
+    @Override
+    public void start() {
+        runtime.reset();
+    }
+
+    @Override
+    public void loop() {
+        // Setup mecanum wheel drive variables
+        double y = gamepad1.left_stick_y;
+        double x = -gamepad1.left_stick_x;
+        double turn = -gamepad1.right_stick_x;
+
+        double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(turn), 0.2);
+
+        // Calculate power for each wheel
+        double frontLeftPower = ((y + x + turn) / denominator) * 0.75;
+        double backLeftPower = ((y - x + turn) / denominator) * 0.75;
+        double frontRightPower = ((y - x - turn) / denominator) * 0.75;
+        double backRightPower = ((y + x - turn) / denominator) * 0.75;
+
+        // Set power to wheels
+        frontLeft.setPower(frontLeftPower);
+        backLeft.setPower(backLeftPower);
+        frontRight.setPower(frontRightPower);
+        backRight.setPower(backRightPower);
+
+        // Control linear motor using D-pad
+        if (gamepad2.dpad_up) {
+            linearMotor.setTargetPosition(linearMotor.getCurrentPosition() + 100);
+            linearMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            linearMotor.setPower(1.0);
+        } else if (gamepad2.dpad_down) {
+            linearMotor.setTargetPosition(linearMotor.getCurrentPosition() - 100);
+            linearMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            linearMotor.setPower(1.0);
+        }
+
+        // Control back arm using bumpers
+        //levi
+        if (gamepad2.right_bumper) {
+            backArm.setTargetPosition(backArm.getCurrentPosition() + 10);
+            backArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            backArm.setPower(1.0);
+        } else if (gamepad2.left_bumper) {
+            backArm.setTargetPosition(backArm.getCurrentPosition() - 10);
+            backArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            backArm.setPower(1.0);
+        }
+
+        // Toggle clockwise rotation using X button
+        //brendan
+       /* if (gamepad1.right_trigger > 0.5 && !isCounterClockwise) {
+            isClockwise = !isClockwise; // Toggle state
+            continuousServo.setPosition(isClockwise ? 1.0 : 0.5); // Start or stop
+            debounceDelay();
+        }
+
+        // Toggle counterclockwise rotation using B button
+        if (gamepad1.left_trigger > 0.5 && !isClockwise) {
+            isCounterClockwise = !isCounterClockwise; // Toggle state
+            continuousServo.setPosition(isCounterClockwise ? 0.0 : 0.5); // Start or stop
+            debounceDelay();
+        }
+*/
+        if (gamepad1.x && !firstXButtonState&& !isCounterClockwise) {
+            isClockwise = !isClockwise; // Toggle state
+            continuousServo.setPosition(isClockwise ? 1.0 : 0.5); // Start or stop
+            debounceDelay();
+        }
+        firstXButtonState= gamepad1.x;
+
+        if (gamepad1.b && !firstBButtonState&& !isClockwise) {
+            isCounterClockwise = !isCounterClockwise; // Toggle state
+            continuousServo.setPosition(isCounterClockwise ? 0.0 : 0.5); // Start or stop
+            debounceDelay();
+        }
+        firstBButtonState= gamepad1.b;
+        // Toggle servo open/close with X button
+        if (gamepad2.x && !lastXButtonState) {
+            isServoOpen = !isServoOpen;
+            gripperServo.setPosition(isServoOpen ? 0.12 : 0.0);
+        }
+        lastXButtonState = gamepad2.x;
+
+        // Toggle wrist with A button
+        if (gamepad2.a && !lastAButtonState) {
+            isWristUsed = !isWristUsed;
+            flipWrist.setPosition(isWristUsed ? 0.72 : 0.0);
+        }
+        lastAButtonState = gamepad2.a;
+
+        // Telemetry data for motors and servos
+        telemetry.addData("Linear Motor Position", linearMotor.getCurrentPosition());
+        telemetry.addData("Gripper Servo Position", gripperServo.getPosition());
+        telemetry.addData("Flip Wrist Position", flipWrist.getPosition());
+        telemetry.addData("Back Arm Position", backArm.getCurrentPosition());
+
+        // Drivetrain telemetry
+        telemetry.addData("Front Left Ticks", frontLeft.getCurrentPosition());
+        telemetry.addData("Back Left Ticks", backLeft.getCurrentPosition());
+        telemetry.addData("Front Right Ticks", frontRight.getCurrentPosition());
+        telemetry.addData("Back Right Ticks", backRight.getCurrentPosition());
+
+        // Update telemetry
+        telemetry.update();
+    }
+
+    private void debounceDelay() {
+        try {
+            sleep(300); // Debounce delay
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+}
